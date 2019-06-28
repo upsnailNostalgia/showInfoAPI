@@ -2,7 +2,6 @@
 # -*- coding:utf-8 -*-
 # !author:bruce chou
 
-from flask import request
 from flask import Flask, jsonify
 import pymysql
 import datetime
@@ -21,70 +20,68 @@ def hello_world():
 #     return 'User %s' % username
 
 
-@app.route("/repobasicinfo/")
-def show_basicInfo():
+@app.route("/repobasicinfo/<int:days>/")
+def show_basicInfo(days):
 
-    """
+    '''
     该函数基本信息新增的数量(一日内，七日内，一月内)
     :param days:
     :return:
-    """
-    days = request.args.get('days')
+    '''
     nowTime = datetime.datetime.now()
     beforeTime_str = (nowTime-datetime.timedelta(int(days))).strftime('%Y-%m-%d %H:%M:%S')
     conn = getConnection()
     cursor = conn.cursor()
-    sql_select = "select count(*) from repository_java where crawl_time > '"+ beforeTime_str + "'"
+    sql_select = "select count(*) from repository_java where crawl_time > '"+ beforeTime_str +"'"
     result = getCount(sql_select)
     return result
 
 
-@app.route("/repoclone/")
-def get_repoClone():
-    """
+@app.route("/repoclone/<int:days>/")
+def get_repoClone(days):
+    '''
     该函数用来获取项目clone的情况（一日内，七日内，一月内）
     :param days:
     :return:
-    """
-    days = request.args.get('days')
+    '''
     nowTime = datetime.datetime.now()
     beforeTime_str = (nowTime - datetime.timedelta(int(days))).strftime('%Y-%m-%d %H:%M:%S')
-    sql_select = "select count(*) from repository_java where scan_time > '"+ beforeTime_str + "'"
+    sql_select = "select count(*) from repository_java where scan_time > '"+ beforeTime_str +"'"
 
     result = getCount(sql_select)
     return result
 
 @app.route("/totalbasic/")
 def getTotalBasic():
-    """
+    '''
     该函数用来获取总共爬取了多少repo的基础信息
     :return:
-    """
+    '''
     sql_select = "select count(*) from repository_java"
     result = getCount(sql_select)
     return result
 
 @app.route("/totalclone/")
 def getTotalClone():
-    """
+    '''
     该函数用来获取总共服务器上有多少repo
     :return:
-    """
+    '''
     sql_select = "select count(*) from repository_java where is_downloaded=1"
     result = getCount(sql_select)
     return result
 
 
 @app.route("/repocloneinfo/")
+@app.route("/repocloneinfo/<int:page>/")
 def getRepoCloneInfo(page=1):
-    """
+    '''
     该函数用来得到已经clone的repo的基本信息情况
     :return:
-    """
-    page = request.args.get('page')
-    perpage = request.args.get('perpage')
-    start = str((int(page)-1)*int(perpage))
-    sql_select = "select repos_name,owner_name,git_address,pushed_at,scan_time from repository_java where is_downloaded=1 limit "+start+","+perpage
+    '''
+    start = str((int(page)-1)*15)
+
+    sql_select = "select repos_name,owner_name,git_address,pushed_at,scan_time from repository_java where is_downloaded=1 limit "+start+",15"
     result = getRepoInfo(sql_select)
     # data = {}
     index = 0
@@ -106,10 +103,10 @@ def getRepoCloneInfo(page=1):
     return jsonify(repoData)
 
 def getRepoInfo(sql_select):
-    """
+    '''
     该函数用来获取repo的基础信息情况
     :return:
-    """
+    '''
     conn = getConnection()
     cursor = conn.cursor()
     cursor.execute(sql_select)
@@ -127,11 +124,11 @@ def getRepoInfo(sql_select):
     return repos
 
 def getCount(sql_select):
-    """
+    '''
     该函数返回select的搜索数量
     :param sql_select:
     :return:
-    """
+    '''
     conn = getConnection()
     cursor = conn.cursor()
     cursor.execute(sql_select)
@@ -141,10 +138,10 @@ def getCount(sql_select):
     return str(rs[0])
 
 def getConnection():
-    """
+    '''
     该函数用来得到数据库连接的connection
     :return:返回connection
-    """
+    '''
     # conn = pymysql.Connect(host='127.0.0.1', port=3306, user='root', passwd='zzt123456', db='github', charset='utf8')
     conn = pymysql.Connect(host='10.141.221.85', port=3306, user='root', passwd='root', db='github', charset='utf8')
     return conn
@@ -183,8 +180,8 @@ def testFun():
 
 
 if __name__ == '__main__':
-    #app.run(host='0.0.0.0', port=8000, threaded=True, debug="true")
-    app.run(host='0.0.0.0', port=5001, threaded=True, debug="true")
+    app.run(host='0.0.0.0', port=5001, threaded=True)
+
     # getRepoFromMysql()
     # testFun()
     # getRepoCloneInfo()
